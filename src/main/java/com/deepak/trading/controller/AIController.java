@@ -3,6 +3,7 @@ package com.deepak.trading.controller;
 import com.deepak.trading.dto.ChatRequest;
 import com.deepak.trading.dto.ChatResponse;
 import com.deepak.trading.dto.TradingAnalysisRequest;
+import com.deepak.trading.dto.TradingAnalysisResponse;
 import com.deepak.trading.service.AIService;
 import com.deepak.trading.service.TradingAnalysisService;
 import jakarta.validation.Valid;
@@ -31,7 +32,7 @@ public class AIController {
     }
 
     @PostMapping("/analyze-stock")
-    public ResponseEntity<String> analyzeStock(
+    public ResponseEntity<TradingAnalysisResponse> analyzeStock(
             @Valid @RequestBody TradingAnalysisRequest request) {
 
         return ResponseEntity.ok(

@@ -1,9 +1,10 @@
 package com.deepak.trading.service;
 
 import com.deepak.trading.dto.TradingAnalysisRequest;
+import com.deepak.trading.dto.TradingAnalysisResponse;
 
 public interface TradingAnalysisService {
 
-    String analyzeStock(TradingAnalysisRequest request);
+    TradingAnalysisResponse analyzeStock(TradingAnalysisRequest request);
 
 }
