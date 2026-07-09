@@ -1,0 +1,41 @@
+package com.deepak.trading.controller;
+
+import com.deepak.trading.dto.ChatRequest;
+import com.deepak.trading.dto.ChatResponse;
+import com.deepak.trading.dto.TradingAnalysisRequest;
+import com.deepak.trading.service.AIService;
+import com.deepak.trading.service.TradingAnalysisService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/ai")
+public class AIController {
+
+    private final AIService aiService;
+    private final TradingAnalysisService tradingAnalysisService;
+
+    public AIController(AIService aiService,
+                        TradingAnalysisService tradingAnalysisService) {
+
+        this.aiService = aiService;
+        this.tradingAnalysisService = tradingAnalysisService;
+    }
+
+    @PostMapping("/chat")
+    public ChatResponse chat(@Valid @RequestBody ChatRequest request) {
+
+        return aiService.chat(request);
+
+    }
+
+    @PostMapping("/analyze-stock")
+    public ResponseEntity<String> analyzeStock(
+            @Valid @RequestBody TradingAnalysisRequest request) {
+
+        return ResponseEntity.ok(
+                tradingAnalysisService.analyzeStock(request)
+        );
+    }
+}

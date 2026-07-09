@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: ai-trading-assistant
+
+  profiles:
+    active: local
