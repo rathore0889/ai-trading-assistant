@@ -1,0 +1,20 @@
+package com.deepak.trading.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
+
+@Configuration
+public class MarketApiConfig {
+
+    @Value("${market.api.url}")
+    private String baseUrl;
+
+    @Bean
+    public RestClient restClient() {
+        return RestClient.builder()
+                .baseUrl(baseUrl)
+                .build();
+    }
+}

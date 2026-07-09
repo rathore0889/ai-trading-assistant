@@ -22,3 +22,8 @@ spring:
       chat:
         options:
           model: llama3.1:8b
+
+  market:
+    api:
+      key: d97skcpr01qng2npe8qgd97skcpr01qng2npe8r0
+      url: https://finnhub.io/api/v1
