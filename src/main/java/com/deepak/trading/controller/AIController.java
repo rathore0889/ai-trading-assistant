@@ -4,8 +4,10 @@ import com.deepak.trading.dto.ChatRequest;
 import com.deepak.trading.dto.ChatResponse;
 import com.deepak.trading.dto.TradingAnalysisRequest;
 import com.deepak.trading.dto.TradingAnalysisResponse;
+import com.deepak.trading.dto.market.StockPriceResponse;
 import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.service.AIService;
+import com.deepak.trading.service.MarketDataService;
 import com.deepak.trading.service.TradingAnalysisService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +21,15 @@ public class AIController {
 
     private final AIService aiService;
     private final TradingAnalysisService tradingAnalysisService;
+    private final MarketDataService marketDataService;
 
     public AIController(AIService aiService,
-                        TradingAnalysisService tradingAnalysisService) {
+                        TradingAnalysisService tradingAnalysisService,
+                        MarketDataService marketDataService) {
 
         this.aiService = aiService;
         this.tradingAnalysisService = tradingAnalysisService;
+        this.marketDataService = marketDataService;
     }
 
     @PostMapping("/chat")
@@ -54,6 +59,15 @@ public class AIController {
 
         return ResponseEntity.ok(
                 tradingAnalysisService.getHistoryBySymbol(symbol)
+        );
+    }
+
+    @GetMapping("/price/{symbol}")
+    public ResponseEntity<StockPriceResponse> getPrice(
+            @PathVariable String symbol) {
+
+        return ResponseEntity.ok(
+                marketDataService.getCurrentPrice(symbol)
         );
     }
 }

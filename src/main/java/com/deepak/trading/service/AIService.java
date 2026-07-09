@@ -8,6 +8,5 @@ import com.deepak.trading.dto.TradingAnalysisResponse;
 public interface AIService {
 
     ChatResponse chat(ChatRequest request);
-    TradingAnalysisResponse analyzeStock(TradingAnalysisRequest request);
 
 }

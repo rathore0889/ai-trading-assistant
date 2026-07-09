@@ -6,7 +6,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TradingPromptBuilder {
 
-    public String buildPrompt(TradingAnalysisRequest request) {
+    public String buildPrompt(TradingAnalysisRequest request,
+                              Double currentPrice) {
 
         return """
 You are a Senior Financial Advisor.
@@ -41,7 +42,7 @@ Quantity : %d
                 .formatted(
                         request.getSymbol(),
                         request.getBuyPrice(),
-                        request.getCurrentPrice(),
+                        currentPrice,
                         request.getQuantity());
     }
 

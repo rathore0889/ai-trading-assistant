@@ -2,8 +2,6 @@ package com.deepak.trading.service.impl;
 
 import com.deepak.trading.dto.ChatRequest;
 import com.deepak.trading.dto.ChatResponse;
-import com.deepak.trading.dto.TradingAnalysisRequest;
-import com.deepak.trading.dto.TradingAnalysisResponse;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.service.AIService;
 import org.springframework.ai.chat.client.ChatClient;
@@ -32,25 +30,5 @@ public class AIServiceImpl implements AIService {
 
         return new ChatResponse(response);
 
-    }
-
-    @Override
-    public TradingAnalysisResponse analyzeStock(TradingAnalysisRequest request) {
-
-        String prompt = tradingPromptBuilder.buildPrompt(request);
-
-        String aiResponse = chatClient
-                .prompt(prompt)
-                .call()
-                .content();
-
-        TradingAnalysisResponse response = new TradingAnalysisResponse();
-
-        response.setRecommendation("TEMP");
-        response.setConfidence(0);
-        response.setRisk("NA");
-        response.setReason(aiResponse);
-
-        return response;
     }
 }
