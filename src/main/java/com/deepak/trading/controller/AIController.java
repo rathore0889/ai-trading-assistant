@@ -4,11 +4,14 @@ import com.deepak.trading.dto.ChatRequest;
 import com.deepak.trading.dto.ChatResponse;
 import com.deepak.trading.dto.TradingAnalysisRequest;
 import com.deepak.trading.dto.TradingAnalysisResponse;
+import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.service.AIService;
 import com.deepak.trading.service.TradingAnalysisService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -37,6 +40,20 @@ public class AIController {
 
         return ResponseEntity.ok(
                 tradingAnalysisService.analyzeStock(request)
+        );
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<AnalysisHistory>> getHistory() {
+        return ResponseEntity.ok(tradingAnalysisService.getAllHistory());
+    }
+
+    @GetMapping("/history/{symbol}")
+    public ResponseEntity<List<AnalysisHistory>> getHistoryBySymbol(
+            @PathVariable String symbol) {
+
+        return ResponseEntity.ok(
+                tradingAnalysisService.getHistoryBySymbol(symbol)
         );
     }
 }
