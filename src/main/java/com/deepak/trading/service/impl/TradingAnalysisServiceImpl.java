@@ -3,6 +3,7 @@ package com.deepak.trading.service.impl;
 import com.deepak.trading.dto.TradingAnalysisRequest;
 import com.deepak.trading.dto.TradingAnalysisResponse;
 import com.deepak.trading.dto.market.StockPriceResponse;
+import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.repository.AnalysisHistoryRepository;
@@ -40,12 +41,12 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
     @Override
     public TradingAnalysisResponse analyzeStock(TradingAnalysisRequest request) {
 
-        StockPriceResponse stockPrice =
-                marketDataService.getCurrentPrice(request.getSymbol());
+        StockQuoteResponse quote =
+                marketDataService.getQuote(request.getSymbol());
 
-        Double currentPrice = stockPrice.getCurrentPrice();
+        Double currentPrice = quote.getCurrentPrice();
 
-        String prompt = tradingPromptBuilder.buildPrompt(request, currentPrice);
+        String prompt = tradingPromptBuilder.buildPrompt(request, quote);
 
         String aiResponse = chatClient
                 .prompt(prompt)

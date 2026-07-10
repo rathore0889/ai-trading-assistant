@@ -5,6 +5,7 @@ import com.deepak.trading.dto.ChatResponse;
 import com.deepak.trading.dto.TradingAnalysisRequest;
 import com.deepak.trading.dto.TradingAnalysisResponse;
 import com.deepak.trading.dto.market.StockPriceResponse;
+import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.service.AIService;
 import com.deepak.trading.service.MarketDataService;
@@ -63,11 +64,11 @@ public class AIController {
     }
 
     @GetMapping("/price/{symbol}")
-    public ResponseEntity<StockPriceResponse> getPrice(
+    public ResponseEntity<StockQuoteResponse> getPrice(
             @PathVariable String symbol) {
 
         return ResponseEntity.ok(
-                marketDataService.getCurrentPrice(symbol)
+                marketDataService.getQuote(symbol)
         );
     }
 }

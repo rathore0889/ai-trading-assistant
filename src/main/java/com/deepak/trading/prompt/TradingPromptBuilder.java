@@ -1,13 +1,14 @@
 package com.deepak.trading.prompt;
 
 import com.deepak.trading.dto.TradingAnalysisRequest;
+import com.deepak.trading.dto.market.StockQuoteResponse;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TradingPromptBuilder {
 
     public String buildPrompt(TradingAnalysisRequest request,
-                              Double currentPrice) {
+                              StockQuoteResponse quote) {
 
         return """
 You are a Senior Financial Advisor.
@@ -15,13 +16,9 @@ You are a Senior Financial Advisor.
 Rules:
 1. Never guarantee profits.
 2. Explain risks.
-3. Recommend only BUY, SELL or HOLD.
-4. Confidence should be between 0-100.
-5. Return ONLY valid JSON.
-6. Do NOT add markdown.
-7. Do NOT write explanation outside JSON.
-
-Return exactly this structure:
+3. Recommend BUY, SELL or HOLD.
+4. Confidence between 0-100.
+5. Return ONLY JSON.
 
 {
   "recommendation":"",
@@ -36,14 +33,26 @@ Buy Price : %.2f
 
 Current Price : %.2f
 
-Quantity : %d
+Today's High : %.2f
 
+Today's Low : %.2f
+
+Open Price : %.2f
+
+Previous Close : %.2f
+
+Quantity : %d
 """
                 .formatted(
                         request.getSymbol(),
                         request.getBuyPrice(),
-                        currentPrice,
-                        request.getQuantity());
+                        quote.getCurrentPrice(),
+                        quote.getHighPrice(),
+                        quote.getLowPrice(),
+                        quote.getOpenPrice(),
+                        quote.getPreviousClose(),
+                        request.getQuantity()
+                );
     }
 
 }

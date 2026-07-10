@@ -1,7 +1,8 @@
 package com.deepak.trading.service.impl;
 
-import com.deepak.trading.dto.market.MarketResponse;
-import com.deepak.trading.dto.market.StockPriceResponse;
+import com.deepak.trading.dto.market.FinnhubQuoteResponse;
+import com.deepak.trading.dto.market.StockQuoteResponse;
+import com.deepak.trading.mapper.StockMapper;
 import com.deepak.trading.service.MarketDataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,29 +14,20 @@ import org.springframework.web.client.RestClient;
 public class MarketDataServiceImpl implements MarketDataService {
 
     private final RestClient restClient;
+    private final StockMapper stockMapper;
 
     @Value("${market.api.key}")
     private String apiKey;
 
     @Override
-    public StockPriceResponse getCurrentPrice(String symbol) {
+    public StockQuoteResponse getQuote(String symbol) {
 
-        // API call next step me likhenge
-        MarketResponse response = restClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/quote")
-                        .queryParam("symbol", symbol)
-                        .queryParam("token", apiKey)
-                        .build())
+        FinnhubQuoteResponse quote = restClient.get()
+                .uri("https://finnhub.io/api/v1/quote?symbol={symbol}&token={token}",
+                        symbol, apiKey)
                 .retrieve()
-                .body(MarketResponse.class);
+                .body(FinnhubQuoteResponse.class);
 
-        StockPriceResponse stock = new StockPriceResponse();
-
-        stock.setSymbol(symbol);
-        stock.setCurrentPrice(response.getC());
-
-        return stock;
+        return stockMapper.toResponse(quote);
     }
 }
