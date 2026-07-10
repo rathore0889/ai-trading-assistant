@@ -1,5 +1,6 @@
 package com.deepak.trading.service.impl;
 
+import com.deepak.trading.dto.market.CompanyProfileResponse;
 import com.deepak.trading.dto.market.FinnhubQuoteResponse;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.mapper.StockMapper;
@@ -29,5 +30,18 @@ public class MarketDataServiceImpl implements MarketDataService {
                 .body(FinnhubQuoteResponse.class);
 
         return stockMapper.toResponse(quote);
+    }
+
+    @Override
+    public CompanyProfileResponse getCompanyProfile(String symbol) {
+
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/stock/profile2")
+                        .queryParam("symbol", symbol)
+                        .queryParam("token", apiKey)
+                        .build())
+                .retrieve()
+                .body(CompanyProfileResponse.class);
     }
 }
