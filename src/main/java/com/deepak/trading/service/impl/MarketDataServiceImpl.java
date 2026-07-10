@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -34,10 +35,12 @@ public class MarketDataServiceImpl implements MarketDataService {
     private String apiKey;
 
     @Override
+    @Cacheable(value = "quotes", key = "#symbol")
     public StockQuoteResponse getQuote(String symbol) {
 
-        try {
+        log.info("Fetching quote from Finnhub for {}", symbol);
 
+        try {
             FinnhubQuoteResponse quote = restClient.get()
                     .uri("https://finnhub.io/api/v1/quote?symbol={symbol}&token={token}",
                             symbol, apiKey)
@@ -83,8 +86,10 @@ public class MarketDataServiceImpl implements MarketDataService {
     }
 
     @Override
+    @Cacheable(value = "profiles", key = "#symbol")
     public CompanyProfileResponse getCompanyProfile(String symbol) {
 
+        log.info("Fetching profile from Finnhub for {}", symbol);
         try {
 
             return restClient.get()
@@ -106,7 +111,10 @@ public class MarketDataServiceImpl implements MarketDataService {
     }
 
     @Override
+    @Cacheable(value = "news", key = "#symbol")
     public List<CompanyNewsResponse> getCompanyNews(String symbol) {
+
+        log.info("Fetching news from Finnhub for {}", symbol);
 
         try {
 
