@@ -7,6 +7,7 @@ import com.deepak.trading.dto.market.CompanyProfileResponse;
 import com.deepak.trading.dto.market.MarketInsight;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
+import com.deepak.trading.exception.AIResponseParsingException;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.repository.AnalysisHistoryRepository;
 import com.deepak.trading.service.MarketDataService;
@@ -108,13 +109,9 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
             repository.save(history);
 
             return response;
-        } catch (JsonProcessingException e) {
-//            log.error("Invalid JSON received from AI", e);
-            throw new RuntimeException("AI returned invalid JSON", e);
-
         } catch (Exception e) {
 //            log.error("Unable to parse AI response", e);
-            throw new RuntimeException("Unable to parse AI response", e);
+            throw new AIResponseParsingException("Invalid AI response received from Ollama",e);
         }
 
     }
