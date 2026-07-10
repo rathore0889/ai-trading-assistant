@@ -8,12 +8,14 @@ import com.deepak.trading.mapper.StockMapper;
 import com.deepak.trading.service.MarketDataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +37,33 @@ public class MarketDataServiceImpl implements MarketDataService {
                 .body(FinnhubQuoteResponse.class);
 
         return stockMapper.toResponse(quote);
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<StockQuoteResponse> getQuoteAsync(String symbol) {
+
+        return CompletableFuture.completedFuture(
+                getQuote(symbol)
+        );
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<CompanyProfileResponse> getCompanyProfileAsync(String symbol) {
+
+        return CompletableFuture.completedFuture(
+                getCompanyProfile(symbol)
+        );
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<List<CompanyNewsResponse>> getCompanyNewsAsync(String symbol) {
+
+        return CompletableFuture.completedFuture(
+                getCompanyNews(symbol)
+        );
     }
 
     @Override

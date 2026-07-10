@@ -5,6 +5,7 @@ import com.deepak.trading.dto.market.CompanyProfileResponse;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public interface MarketDataService {
 
@@ -13,4 +14,10 @@ public interface MarketDataService {
     CompanyProfileResponse getCompanyProfile(String symbol);
 
     List<CompanyNewsResponse> getCompanyNews(String symbol);
+
+    CompletableFuture<StockQuoteResponse> getQuoteAsync(String symbol);
+
+    CompletableFuture<CompanyProfileResponse> getCompanyProfileAsync(String symbol);
+
+    CompletableFuture<List<CompanyNewsResponse>> getCompanyNewsAsync(String symbol);
 }
