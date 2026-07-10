@@ -21,7 +21,7 @@ spring:
 
       chat:
         options:
-          model: llama3.1:8b
+          model: qwen2.5:3b
 
 market:
   api:

@@ -24,42 +24,33 @@ public class TradingPromptBuilder {
 
         List<CompanyNewsResponse> news = insight.getNews();
 
-        for (CompanyNewsResponse item : news) {
-
-            newsBuilder
-                    .append("- ")
-                    .append(item.getHeadline())
-                    .append("\n");
-        }
+        news.stream()
+                .limit(3)
+                .forEach(item ->
+                        newsBuilder.append("- ")
+                                .append(item.getHeadline())
+                                .append("\n"));
 
         return """
-You are a Senior Financial Advisor.
+You are an expert financial advisor.
 
-Company : %s
+Analyze the stock.
 
-Industry : %s
+Company: %s
+Industry: %s
+Exchange: %s
 
-Exchange : %s
+Current Price: %.2f
+Buy Price: %.2f
+Quantity: %d
 
-Current Price : %.2f
-
-Buy Price : %.2f
-
-Quantity : %d
-
-Recent News
-
+Recent News:
 %s
 
-Rules
-
-1. Never guarantee profits.
-2. Explain risks.
-3. Recommend BUY SELL HOLD only.
-4. Return JSON only.
+Respond ONLY with valid JSON.
 
 {
-  "recommendation":"",
+  "recommendation":"BUY | SELL | HOLD",
   "confidence":0,
   "risk":"",
   "reason":""
@@ -72,7 +63,7 @@ Rules
                         quote.getCurrentPrice(),
                         request.getBuyPrice(),
                         request.getQuantity(),
-                        newsBuilder.toString()
+                        newsBuilder
                 );
     }
 

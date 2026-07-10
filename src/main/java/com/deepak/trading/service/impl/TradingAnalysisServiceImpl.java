@@ -12,6 +12,7 @@ import com.deepak.trading.repository.AnalysisHistoryRepository;
 import com.deepak.trading.service.MarketDataService;
 import com.deepak.trading.service.MarketInsightService;
 import com.deepak.trading.service.TradingAnalysisService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -44,21 +45,49 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
     @Override
     public TradingAnalysisResponse analyzeStock(TradingAnalysisRequest request) {
 
+        long start = System.currentTimeMillis();
+        long marketStart = System.currentTimeMillis();
+
         MarketInsight insight =
                 marketInsightService.getMarketInsight(request.getSymbol());
 
         StockQuoteResponse quote = insight.getQuote();
+
+        System.out.println("Market API Time : "
+                + (System.currentTimeMillis() - marketStart));
+
+        long promptStart = System.currentTimeMillis();
 
         String prompt = tradingPromptBuilder.buildPrompt(
                 request,
                 insight
         );
 
+        System.out.println("Prompt Time : "
+                + (System.currentTimeMillis() - promptStart));
+        long aiStart = System.currentTimeMillis();
+
+        try {
+        String aiResponse = chatClient
+                .prompt(prompt)
+                .call()
+                .content();
+
+        System.out.println("========== AI RAW RESPONSE ==========");
+        System.out.println(aiResponse);
+        System.out.println("=====================================");
+
         TradingAnalysisResponse response =
-                chatClient
-                        .prompt(prompt)
-                        .call()
-                        .entity(TradingAnalysisResponse.class);
+                objectMapper.readValue(
+                        aiResponse,
+                        TradingAnalysisResponse.class
+                );
+
+        System.out.println("AI Time : "
+                + (System.currentTimeMillis() - aiStart));
+
+        System.out.println("Total Time : "
+                + (System.currentTimeMillis() - start));
 
             // DTO -> Entity
             AnalysisHistory history = new AnalysisHistory();
@@ -79,6 +108,14 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
             repository.save(history);
 
             return response;
+        } catch (JsonProcessingException e) {
+//            log.error("Invalid JSON received from AI", e);
+            throw new RuntimeException("AI returned invalid JSON", e);
+
+        } catch (Exception e) {
+//            log.error("Unable to parse AI response", e);
+            throw new RuntimeException("Unable to parse AI response", e);
+        }
 
     }
 
