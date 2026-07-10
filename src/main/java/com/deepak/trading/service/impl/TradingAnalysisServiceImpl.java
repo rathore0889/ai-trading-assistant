@@ -2,18 +2,14 @@ package com.deepak.trading.service.impl;
 
 import com.deepak.trading.dto.TradingAnalysisRequest;
 import com.deepak.trading.dto.TradingAnalysisResponse;
-import com.deepak.trading.dto.market.CompanyNewsResponse;
-import com.deepak.trading.dto.market.CompanyProfileResponse;
 import com.deepak.trading.dto.market.MarketInsight;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.exception.AIResponseParsingException;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.repository.AnalysisHistoryRepository;
-import com.deepak.trading.service.MarketDataService;
 import com.deepak.trading.service.MarketInsightService;
 import com.deepak.trading.service.TradingAnalysisService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -21,8 +17,14 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class TradingAnalysisServiceImpl implements TradingAnalysisService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(TradingAnalysisServiceImpl.class);
 
     private final ChatClient chatClient;
     private final TradingPromptBuilder tradingPromptBuilder;
@@ -54,8 +56,7 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
 
         StockQuoteResponse quote = insight.getQuote();
 
-        System.out.println("Market API Time : "
-                + (System.currentTimeMillis() - marketStart));
+        log.info("Market API Time : {} ms", (System.currentTimeMillis() - marketStart));
 
         long promptStart = System.currentTimeMillis();
 
@@ -64,8 +65,7 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
                 insight
         );
 
-        System.out.println("Prompt Time : "
-                + (System.currentTimeMillis() - promptStart));
+        log.info("Prompt Time : {} " , (System.currentTimeMillis() - promptStart));
         long aiStart = System.currentTimeMillis();
 
         try {
@@ -74,9 +74,9 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
                 .call()
                 .content();
 
-        System.out.println("========== AI RAW RESPONSE ==========");
-        System.out.println(aiResponse);
-        System.out.println("=====================================");
+        log.info("========== AI RAW RESPONSE ==========");
+        log.info(aiResponse);
+        log.info("=====================================");
 
         TradingAnalysisResponse response =
                 objectMapper.readValue(
@@ -84,11 +84,9 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
                         TradingAnalysisResponse.class
                 );
 
-        System.out.println("AI Time : "
-                + (System.currentTimeMillis() - aiStart));
+        log.info("AI Time : {} ", (System.currentTimeMillis() - aiStart));
 
-        System.out.println("Total Time : "
-                + (System.currentTimeMillis() - start));
+        log.info("Total Time : {} ", (System.currentTimeMillis() - start));
 
             // DTO -> Entity
             AnalysisHistory history = new AnalysisHistory();
@@ -110,7 +108,7 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
 
             return response;
         } catch (Exception e) {
-//            log.error("Unable to parse AI response", e);
+            log.error("Unable to parse AI response", e);
             throw new AIResponseParsingException("Invalid AI response received from Ollama",e);
         }
 

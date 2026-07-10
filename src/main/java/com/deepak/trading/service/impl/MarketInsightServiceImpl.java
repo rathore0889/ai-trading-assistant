@@ -7,6 +7,8 @@ import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.service.MarketDataService;
 import com.deepak.trading.service.MarketInsightService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +18,9 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class MarketInsightServiceImpl
         implements MarketInsightService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(MarketInsightServiceImpl.class);
 
     private final MarketDataService marketDataService;
 
