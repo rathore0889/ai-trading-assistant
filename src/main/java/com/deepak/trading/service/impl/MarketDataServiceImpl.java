@@ -1,5 +1,6 @@
 package com.deepak.trading.service.impl;
 
+import com.deepak.trading.dto.market.CompanyNewsResponse;
 import com.deepak.trading.dto.market.CompanyProfileResponse;
 import com.deepak.trading.dto.market.FinnhubQuoteResponse;
 import com.deepak.trading.dto.market.StockQuoteResponse;
@@ -9,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -43,5 +48,27 @@ public class MarketDataServiceImpl implements MarketDataService {
                         .build())
                 .retrieve()
                 .body(CompanyProfileResponse.class);
+    }
+
+    @Override
+    public List<CompanyNewsResponse> getCompanyNews(String symbol) {
+
+        LocalDate today = LocalDate.now();
+
+        LocalDate from = today.minusDays(7);
+
+        CompanyNewsResponse[] response =
+                restClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/company-news")
+                                .queryParam("symbol", symbol)
+                                .queryParam("from", from)
+                                .queryParam("to", today)
+                                .queryParam("token", apiKey)
+                                .build())
+                        .retrieve()
+                        .body(CompanyNewsResponse[].class);
+
+        return Arrays.asList(response);
     }
 }

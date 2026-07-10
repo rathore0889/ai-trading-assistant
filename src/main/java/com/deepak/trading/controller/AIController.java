@@ -4,6 +4,7 @@ import com.deepak.trading.dto.ChatRequest;
 import com.deepak.trading.dto.ChatResponse;
 import com.deepak.trading.dto.TradingAnalysisRequest;
 import com.deepak.trading.dto.TradingAnalysisResponse;
+import com.deepak.trading.dto.market.CompanyNewsResponse;
 import com.deepak.trading.dto.market.CompanyProfileResponse;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
@@ -78,6 +79,15 @@ public class AIController {
 
         return ResponseEntity.ok(
                 marketDataService.getCompanyProfile(symbol)
+        );
+    }
+
+    @GetMapping("/news/{symbol}")
+    public ResponseEntity<List<CompanyNewsResponse>> getNews(
+            @PathVariable String symbol) {
+
+        return ResponseEntity.ok(
+                marketDataService.getCompanyNews(symbol)
         );
     }
 }
