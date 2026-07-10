@@ -54,16 +54,11 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
                 insight
         );
 
-        String aiResponse = chatClient
-                .prompt(prompt)
-                .call()
-                .content();
-
-        try {
-
-            // JSON -> DTO
-            TradingAnalysisResponse response =
-                    objectMapper.readValue(aiResponse, TradingAnalysisResponse.class);
+        TradingAnalysisResponse response =
+                chatClient
+                        .prompt(prompt)
+                        .call()
+                        .entity(TradingAnalysisResponse.class);
 
             // DTO -> Entity
             AnalysisHistory history = new AnalysisHistory();
@@ -85,9 +80,6 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
 
             return response;
 
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to parse AI response", e);
-        }
     }
 
     @Override
