@@ -12,6 +12,8 @@ public class UserRequest {
     @NotBlank(message = "Email is required")
     private String email;
 
+    private String password;
+
     public String getFullName() {
         return fullName;
     }
@@ -26,5 +28,13 @@ public class UserRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
