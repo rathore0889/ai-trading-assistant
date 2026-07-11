@@ -3,6 +3,8 @@ package com.deepak.trading.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "users")
@@ -21,6 +23,11 @@ public class User {
     private String password;
 
     private String role;
+
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL)
+    private List<AnalysisHistory> analyses;
 
     public User() {
     }

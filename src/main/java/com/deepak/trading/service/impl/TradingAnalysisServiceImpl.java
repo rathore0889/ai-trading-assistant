@@ -5,9 +5,11 @@ import com.deepak.trading.dto.TradingAnalysisResponse;
 import com.deepak.trading.dto.market.MarketInsight;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
+import com.deepak.trading.entity.User;
 import com.deepak.trading.exception.AIResponseParsingException;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.repository.AnalysisHistoryRepository;
+import com.deepak.trading.service.CurrentUserService;
 import com.deepak.trading.service.MarketInsightService;
 import com.deepak.trading.service.TradingAnalysisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,18 +33,21 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
     private final ObjectMapper objectMapper;
     private final AnalysisHistoryRepository repository;
     private final MarketInsightService marketInsightService;
+    private final CurrentUserService currentUserService;
 
     public TradingAnalysisServiceImpl(ChatClient.Builder builder,
                                       TradingPromptBuilder tradingPromptBuilder,
                                       ObjectMapper objectMapper,
                                       AnalysisHistoryRepository repository,
-                                      MarketInsightService marketInsightService) {
+                                      MarketInsightService marketInsightService,
+                                      CurrentUserService currentUserService) {
 
         this.chatClient = builder.build();
         this.tradingPromptBuilder = tradingPromptBuilder;
         this.objectMapper = objectMapper;
         this.repository = repository;
         this.marketInsightService = marketInsightService;
+        this.currentUserService = currentUserService;
     }
 
     @Override
@@ -100,8 +105,10 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
             history.setConfidence(response.getConfidence());
             history.setRisk(response.getRisk());
             history.setReason(response.getReason());
-
             history.setCreatedAt(LocalDateTime.now());
+
+            User currentUser = currentUserService.getCurrentUser();
+            history.setUser(currentUser);
 
             // Save into PostgreSQL
             repository.save(history);
