@@ -7,13 +7,13 @@ import lombok.Data;
 @Data
 public class TradingAnalysisRequest {
 
-    @NotBlank
+    @NotBlank(message = "Stock symbol is required")
     private String symbol;
 
-    @Positive
+    @Positive(message = "Buy price must be greater than 0")
     private double buyPrice;
 
-    @Positive
+    @Positive(message = "Quantity must be greater than 0")
     private int quantity;
 
 }

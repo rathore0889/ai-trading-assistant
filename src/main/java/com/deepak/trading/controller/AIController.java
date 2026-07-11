@@ -11,12 +11,20 @@ import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.service.AIService;
 import com.deepak.trading.service.MarketDataService;
 import com.deepak.trading.service.TradingAnalysisService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(
+        name = "AI Trading",
+        description = "AI Powered Trading APIs"
+)
 @RestController
 @RequestMapping("/api/ai")
 public class AIController {
@@ -41,6 +49,15 @@ public class AIController {
 
     }
 
+    @Operation(
+            summary = "Analyze Stock",
+            description = "AI analyzes the stock and returns BUY, HOLD or SELL recommendation"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Analysis Completed"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "500", description = "AI Processing Failed")
+    })
     @PostMapping("/analyze-stock")
     public ResponseEntity<TradingAnalysisResponse> analyzeStock(
             @Valid @RequestBody TradingAnalysisRequest request) {
