@@ -7,6 +7,10 @@ import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.exception.MarketDataException;
 import com.deepak.trading.mapper.StockMapper;
 import com.deepak.trading.service.MarketDataService;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +39,14 @@ public class MarketDataServiceImpl implements MarketDataService {
     private String apiKey;
 
     @Override
-    @Cacheable(value = "quotes", key = "#symbol")
+    @Retry(name = "marketService")
+    @CircuitBreaker(name = "marketService", fallbackMethod = "getQuoteFallback")
+    @Bulkhead(name = "marketService",fallbackMethod = "getQuoteFallback")
+    @RateLimiter(name = "marketService",fallbackMethod = "getQuoteFallback")
+//    @Cacheable(value = "quotes", key = "#symbol")
     public StockQuoteResponse getQuote(String symbol) {
+
+        log.info("Current Thread : {}", Thread.currentThread().getName());
 
         log.info("Fetching quote from Finnhub for {}", symbol);
 
@@ -145,5 +155,26 @@ public class MarketDataServiceImpl implements MarketDataService {
                     e
             );
         }
+    }
+
+    // =======================
+    // Fallback Method
+    // =======================
+    public StockQuoteResponse getQuoteFallback(
+            String symbol,
+            Exception ex) {
+
+        log.error("Fallback executed for {}", symbol);
+
+        StockQuoteResponse response =
+                new StockQuoteResponse();
+
+        response.setCurrentPrice(0.0);
+        response.setOpenPrice(0.0);
+        response.setHighPrice(0.0);
+        response.setLowPrice(0.0);
+        response.setPreviousClose(0.0);
+
+        return response;
     }
 }
