@@ -6,7 +6,9 @@ import com.deepak.trading.dto.market.MarketInsight;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.entity.User;
+import com.deepak.trading.event.TradingAnalysisCompletedEvent;
 import com.deepak.trading.exception.AIResponseParsingException;
+import com.deepak.trading.producer.TradingAnalysisProducer;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.repository.AnalysisHistoryRepository;
 import com.deepak.trading.service.CurrentUserService;
@@ -34,13 +36,15 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
     private final AnalysisHistoryRepository repository;
     private final MarketInsightService marketInsightService;
     private final CurrentUserService currentUserService;
+    private final TradingAnalysisProducer tradingAnalysisProducer;
 
     public TradingAnalysisServiceImpl(ChatClient.Builder builder,
                                       TradingPromptBuilder tradingPromptBuilder,
                                       ObjectMapper objectMapper,
                                       AnalysisHistoryRepository repository,
                                       MarketInsightService marketInsightService,
-                                      CurrentUserService currentUserService) {
+                                      CurrentUserService currentUserService,
+                                      TradingAnalysisProducer tradingAnalysisProducer) {
 
         this.chatClient = builder.build();
         this.tradingPromptBuilder = tradingPromptBuilder;
@@ -48,6 +52,7 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
         this.repository = repository;
         this.marketInsightService = marketInsightService;
         this.currentUserService = currentUserService;
+        this.tradingAnalysisProducer = tradingAnalysisProducer;
     }
 
     @Override
@@ -112,6 +117,17 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
 
             // Save into PostgreSQL
             repository.save(history);
+// Publish Kafka Event
+            TradingAnalysisCompletedEvent event =
+                    TradingAnalysisCompletedEvent.builder()
+                            .symbol(history.getSymbol())
+                            .recommendation(history.getRecommendation())
+                            .currentPrice(history.getCurrentPrice())
+                            .analysis(response.getReason())
+                            .analysisTime(history.getCreatedAt())
+                            .build();
+
+            tradingAnalysisProducer.publishAnalysisCompleted(event);
 
             return response;
         } catch (Exception e) {

@@ -10,6 +10,28 @@ spring:
       host: localhost
       port: 6379
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: trading-analysis-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "*"
+            value:
+              default:
+                type: com.deepak.trading.event.TradingAnalysisCompletedEvent
+
 management:
   endpoints:
     web:
@@ -64,3 +86,4 @@ resilience4j:
         limitForPeriod: 5
         limitRefreshPeriod: 10s
         timeoutDuration: 0
+
