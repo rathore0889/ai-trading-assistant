@@ -4,3 +4,86 @@ spring:
 
   profiles:
     active: local
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: trading-analysis-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "*"
+            value:
+              default:
+                type: com.deepak.trading.event.TradingAnalysisCompletedEvent
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+  endpoint:
+    health:
+      show-details: always
+
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: AI Trading Assistant
+    description: AI Powered Stock Trading Backend
+    version: 1.0.0
+    developer: Deepak Rathore
+    company: Personal Project
+
+jwt:
+  secret: VGVzdFNwcmluZ0Jvb3RKV1RTZWNyZXRLZXlGb3JEZW1vMTIzNDU2Nzg5MDEyMzQ1Njc4OTA=
+  expiration: 86400000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      marketService:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+  bulkhead:
+    instances:
+      marketService:
+        maxConcurrentCalls: 5
+        maxWaitDuration: 2s
+
+  retry:
+    instances:
+      marketService:
+        maxAttempts: 3
+        waitDuration: 2s
+
+  ratelimiter:
+    instances:
+      marketService:
+        limitForPeriod: 5
+        limitRefreshPeriod: 10s
+        timeoutDuration: 0
+

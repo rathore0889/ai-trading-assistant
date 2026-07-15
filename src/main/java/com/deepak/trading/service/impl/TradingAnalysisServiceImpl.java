@@ -2,12 +2,17 @@ package com.deepak.trading.service.impl;
 
 import com.deepak.trading.dto.TradingAnalysisRequest;
 import com.deepak.trading.dto.TradingAnalysisResponse;
-import com.deepak.trading.dto.market.StockPriceResponse;
+import com.deepak.trading.dto.market.MarketInsight;
 import com.deepak.trading.dto.market.StockQuoteResponse;
 import com.deepak.trading.entity.AnalysisHistory;
+import com.deepak.trading.entity.User;
+import com.deepak.trading.event.TradingAnalysisCompletedEvent;
+import com.deepak.trading.exception.AIResponseParsingException;
+import com.deepak.trading.producer.TradingAnalysisProducer;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.repository.AnalysisHistoryRepository;
-import com.deepak.trading.service.MarketDataService;
+import com.deepak.trading.service.CurrentUserService;
+import com.deepak.trading.service.MarketInsightService;
 import com.deepak.trading.service.TradingAnalysisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.client.ChatClient;
@@ -16,72 +21,120 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class TradingAnalysisServiceImpl implements TradingAnalysisService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(TradingAnalysisServiceImpl.class);
 
     private final ChatClient chatClient;
     private final TradingPromptBuilder tradingPromptBuilder;
     private final ObjectMapper objectMapper;
     private final AnalysisHistoryRepository repository;
-    private final MarketDataService marketDataService;
+    private final MarketInsightService marketInsightService;
+    private final CurrentUserService currentUserService;
+    private final TradingAnalysisProducer tradingAnalysisProducer;
 
     public TradingAnalysisServiceImpl(ChatClient.Builder builder,
                                       TradingPromptBuilder tradingPromptBuilder,
                                       ObjectMapper objectMapper,
                                       AnalysisHistoryRepository repository,
-                                      MarketDataService marketDataService) {
+                                      MarketInsightService marketInsightService,
+                                      CurrentUserService currentUserService,
+                                      TradingAnalysisProducer tradingAnalysisProducer) {
 
         this.chatClient = builder.build();
         this.tradingPromptBuilder = tradingPromptBuilder;
         this.objectMapper = objectMapper;
         this.repository = repository;
-        this.marketDataService = marketDataService;
+        this.marketInsightService = marketInsightService;
+        this.currentUserService = currentUserService;
+        this.tradingAnalysisProducer = tradingAnalysisProducer;
     }
 
     @Override
     public TradingAnalysisResponse analyzeStock(TradingAnalysisRequest request) {
 
-        StockQuoteResponse quote =
-                marketDataService.getQuote(request.getSymbol());
+        long start = System.currentTimeMillis();
+        long marketStart = System.currentTimeMillis();
 
-        Double currentPrice = quote.getCurrentPrice();
+        MarketInsight insight =
+                marketInsightService.getMarketInsight(request.getSymbol());
 
-        String prompt = tradingPromptBuilder.buildPrompt(request, quote);
+        StockQuoteResponse quote = insight.getQuote();
 
+        log.info("Market API Time : {} ms", (System.currentTimeMillis() - marketStart));
+
+        long promptStart = System.currentTimeMillis();
+
+        String prompt = tradingPromptBuilder.buildPrompt(
+                request,
+                insight
+        );
+
+        log.info("Prompt Time : {} " , (System.currentTimeMillis() - promptStart));
+        long aiStart = System.currentTimeMillis();
+
+        try {
         String aiResponse = chatClient
                 .prompt(prompt)
                 .call()
                 .content();
 
-        try {
+        log.info("========== AI RAW RESPONSE ==========");
+        log.info(aiResponse);
+        log.info("=====================================");
 
-            // JSON -> DTO
-            TradingAnalysisResponse response =
-                    objectMapper.readValue(aiResponse, TradingAnalysisResponse.class);
+        TradingAnalysisResponse response =
+                objectMapper.readValue(
+                        aiResponse,
+                        TradingAnalysisResponse.class
+                );
+
+        log.info("AI Time : {} ", (System.currentTimeMillis() - aiStart));
+
+        log.info("Total Time : {} ", (System.currentTimeMillis() - start));
 
             // DTO -> Entity
             AnalysisHistory history = new AnalysisHistory();
 
             history.setSymbol(request.getSymbol());
             history.setBuyPrice(request.getBuyPrice());
-            history.setCurrentPrice(currentPrice);
+            history.setCurrentPrice(quote.getCurrentPrice());
             history.setQuantity(request.getQuantity());
 
             history.setRecommendation(response.getRecommendation());
             history.setConfidence(response.getConfidence());
             history.setRisk(response.getRisk());
             history.setReason(response.getReason());
-
             history.setCreatedAt(LocalDateTime.now());
+
+            User currentUser = currentUserService.getCurrentUser();
+            history.setUser(currentUser);
 
             // Save into PostgreSQL
             repository.save(history);
+// Publish Kafka Event
+            TradingAnalysisCompletedEvent event =
+                    TradingAnalysisCompletedEvent.builder()
+                            .symbol(history.getSymbol())
+                            .recommendation(history.getRecommendation())
+                            .currentPrice(history.getCurrentPrice())
+                            .analysis(response.getReason())
+                            .analysisTime(history.getCreatedAt())
+                            .build();
+
+            tradingAnalysisProducer.publishAnalysisCompleted(event);
 
             return response;
-
         } catch (Exception e) {
-            throw new RuntimeException("Unable to parse AI response", e);
+            log.error("Unable to parse AI response", e);
+            throw new AIResponseParsingException("Invalid AI response received from Ollama",e);
         }
+
     }
 
     @Override

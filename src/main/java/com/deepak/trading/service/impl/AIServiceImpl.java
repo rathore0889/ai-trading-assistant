@@ -4,11 +4,16 @@ import com.deepak.trading.dto.ChatRequest;
 import com.deepak.trading.dto.ChatResponse;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.service.AIService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AIServiceImpl implements AIService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(AIServiceImpl.class);
 
     private final ChatClient chatClient;
     private final TradingPromptBuilder tradingPromptBuilder;
