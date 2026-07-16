@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Trading Live Notification</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <style>
+
+        body{
+            font-family: Arial;
+            margin:40px;
+        }
+
+        button{
+            padding:10px;
+            margin-right:10px;
+        }
+
+        #messages{
+            margin-top:30px;
+            border:1px solid gray;
+            padding:20px;
+            min-height:250px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h2>AI Trading Notification</h2>
+
+<button onclick="connect()">
+    Connect
+</button>
+
+<button onclick="disconnect()">
+    Disconnect
+</button>
+
+<hr>
+
+<div id="messages">
+
+    Waiting for Notification...
+
+</div>
+
+<script>
+
+    let stompClient = null;
+
+    function connect(){
+
+        let socket = new SockJS('/ws');
+
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({},function(frame){
+
+            console.log(frame);
+
+            document.getElementById("messages").innerHTML =
+                    "Connected Successfully";
+
+            stompClient.subscribe("/topic/trading",function(message){
+
+                let event = JSON.parse(message.body);
+
+                showNotification(event);
+
+            });
+
+        });
+
+    }
+
+    function disconnect(){
+
+        if(stompClient!=null){
+
+            stompClient.disconnect();
+
+        }
+
+        document.getElementById("messages").innerHTML="Disconnected";
+
+    }
+
+    function showNotification(event){
+
+        let html="";
+
+        html+="<h3>Trading Alert</h3>";
+
+        html+="<p><b>Symbol :</b> "+event.symbol+"</p>";
+
+        html+="<p><b>Recommendation :</b> "+event.recommendation+"</p>";
+
+        html+="<p><b>Current Price :</b> "+event.currentPrice+"</p>";
+
+        html+="<p><b>Analysis :</b> "+event.analysis+"</p>";
+
+        html+="<p><b>Time :</b> "+event.analysisTime+"</p>";
+
+        document.getElementById("messages").innerHTML=html;
+
+    }
+
+</script>
+
+</body>
+
+</html>

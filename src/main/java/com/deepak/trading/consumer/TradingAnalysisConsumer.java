@@ -4,6 +4,7 @@ import com.deepak.trading.config.KafkaConfig;
 import com.deepak.trading.event.TradingAnalysisCompletedEvent;
 import com.deepak.trading.notification.EmailService;
 import com.deepak.trading.notification.NotificationService;
+import com.deepak.trading.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,6 +17,8 @@ public class TradingAnalysisConsumer {
 
     private final NotificationService notificationService;
 
+    private final WebSocketNotificationService webSocketNotificationService;
+
     @KafkaListener(topics = KafkaConfig.TRADING_ANALYSIS_TOPIC)
     public void consume(
             TradingAnalysisCompletedEvent event) {
@@ -24,6 +27,7 @@ public class TradingAnalysisConsumer {
 
         try {
             notificationService.notifyUser(event);
+            webSocketNotificationService.sendTradingUpdate(event);
         } catch (Exception ex) {
             log.error("Notification failed", ex);
         }

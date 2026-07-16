@@ -4,6 +4,7 @@ import com.deepak.trading.event.TradingAnalysisCompletedEvent;
 import com.deepak.trading.notification.EmailService;
 import com.deepak.trading.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,10 +13,18 @@ public class NotificationServiceImpl
         implements NotificationService {
 
     private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public void notifyUser(TradingAnalysisCompletedEvent event) {
 
+        // Email
         emailService.sendTradingAnalysisEmail(event);
+
+        // WebSocket
+        messagingTemplate.convertAndSend(
+                "/topic/trading",
+                event
+        );
     }
 }
