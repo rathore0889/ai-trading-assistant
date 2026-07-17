@@ -1,8 +1,10 @@
 package com.deepak.trading.notification.impl;
 
+import com.deepak.trading.event.StockAlertTriggeredEvent;
 import com.deepak.trading.event.TradingAnalysisCompletedEvent;
 import com.deepak.trading.notification.EmailService;
 import com.deepak.trading.notification.NotificationService;
+import com.deepak.trading.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -13,7 +15,7 @@ public class NotificationServiceImpl
         implements NotificationService {
 
     private final EmailService emailService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final WebSocketNotificationService webSocketNotificationService;
 
     @Override
     public void notifyUser(TradingAnalysisCompletedEvent event) {
@@ -22,9 +24,16 @@ public class NotificationServiceImpl
         emailService.sendTradingAnalysisEmail(event);
 
         // WebSocket
-        messagingTemplate.convertAndSend(
-                "/topic/trading",
-                event
-        );
+        webSocketNotificationService.sendTradingUpdate(event);
+    }
+
+    @Override
+    public void notifyAlert(
+            StockAlertTriggeredEvent event) {
+
+        emailService.sendStockAlertEmail(event);
+
+        webSocketNotificationService.sendStockAlert(event);
+
     }
 }

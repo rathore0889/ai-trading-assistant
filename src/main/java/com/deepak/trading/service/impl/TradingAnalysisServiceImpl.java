@@ -8,7 +8,7 @@ import com.deepak.trading.entity.AnalysisHistory;
 import com.deepak.trading.entity.User;
 import com.deepak.trading.event.TradingAnalysisCompletedEvent;
 import com.deepak.trading.exception.AIResponseParsingException;
-import com.deepak.trading.producer.TradingAnalysisProducer;
+import com.deepak.trading.producer.TradingEventProducer;
 import com.deepak.trading.prompt.TradingPromptBuilder;
 import com.deepak.trading.repository.AnalysisHistoryRepository;
 import com.deepak.trading.service.CurrentUserService;
@@ -36,7 +36,7 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
     private final AnalysisHistoryRepository repository;
     private final MarketInsightService marketInsightService;
     private final CurrentUserService currentUserService;
-    private final TradingAnalysisProducer tradingAnalysisProducer;
+    private final TradingEventProducer tradingAnalysisProducer;
 
     public TradingAnalysisServiceImpl(ChatClient.Builder builder,
                                       TradingPromptBuilder tradingPromptBuilder,
@@ -44,7 +44,7 @@ public class TradingAnalysisServiceImpl implements TradingAnalysisService {
                                       AnalysisHistoryRepository repository,
                                       MarketInsightService marketInsightService,
                                       CurrentUserService currentUserService,
-                                      TradingAnalysisProducer tradingAnalysisProducer) {
+                                      TradingEventProducer tradingAnalysisProducer) {
 
         this.chatClient = builder.build();
         this.tradingPromptBuilder = tradingPromptBuilder;
