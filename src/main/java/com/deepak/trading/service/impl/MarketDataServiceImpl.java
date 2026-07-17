@@ -11,6 +11,8 @@ import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,7 @@ public class MarketDataServiceImpl implements MarketDataService {
 
     private final RestClient restClient;
     private final StockMapper stockMapper;
+    private final MeterRegistry meterRegistry;
 
     @Value("${market.api.key}")
     private String apiKey;
@@ -56,6 +59,11 @@ public class MarketDataServiceImpl implements MarketDataService {
                             symbol, apiKey)
                     .retrieve()
                     .body(FinnhubQuoteResponse.class);
+
+            Counter.builder("trading.market.quote.requests")
+                    .description("Total Market Quote Requests")
+                    .register(meterRegistry)
+                    .increment();
 
             return stockMapper.toResponse(quote);
 
