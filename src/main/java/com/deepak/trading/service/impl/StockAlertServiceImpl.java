@@ -1,5 +1,6 @@
 package com.deepak.trading.service.impl;
 
+import com.deepak.trading.audit.service.AuditService;
 import com.deepak.trading.dto.alert.CreateAlertRequest;
 import com.deepak.trading.dto.alert.StockAlertResponse;
 import com.deepak.trading.entity.StockAlert;
@@ -11,21 +12,26 @@ import com.deepak.trading.service.CurrentUserService;
 import com.deepak.trading.service.MarketDataService;
 import com.deepak.trading.service.StockAlertService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+@Slf4j
 @RequiredArgsConstructor
+@Service
 public class StockAlertServiceImpl implements StockAlertService {
 
     private final StockAlertRepository stockAlertRepository;
     private final CurrentUserService currentUserService;
     private final MarketDataService marketDataService;
     private final TradingEventProducer tradingEventProducer;
+    private final AuditService auditService;
 
     @Override
     public StockAlertResponse createAlert(CreateAlertRequest request) {
+
+        log.info("========== CREATE ALERT START ==========");
 
         User currentUser = currentUserService.getCurrentUser();
 
@@ -39,6 +45,24 @@ public class StockAlertServiceImpl implements StockAlertService {
 
         StockAlert savedAlert =
                 stockAlertRepository.save(alert);
+
+        log.info("Stock Alert Saved Successfully");
+        log.info("Saving Audit...");
+
+        auditService.saveAudit(
+                currentUser.getEmail(),
+                "CREATE_ALERT",
+                "SUCCESS",
+                "StockAlert",
+                "Created Alert : " + savedAlert.getSymbol()
+                        + " "
+                        + savedAlert.getCondition()
+                        + " "
+                        + savedAlert.getTargetPrice(),
+                "SYSTEM"
+        );
+
+        log.info("Audit Service Called");
 
         return map(savedAlert);
     }
@@ -88,6 +112,18 @@ public class StockAlertServiceImpl implements StockAlertService {
             if (shouldTrigger) {
                 alert.setTriggered(true);
                 stockAlertRepository.save(alert);
+
+                auditService.saveAudit(
+                        alert.getUser().getEmail(),
+                        "TRIGGER_ALERT",
+                        "SUCCESS",
+                        "StockAlert",
+                        "Alert Triggered : "
+                                + alert.getSymbol()
+                                + " Current Price="
+                                + currentPrice,
+                        "SYSTEM"
+                );
 
                 StockAlertTriggeredEvent event =
                         StockAlertTriggeredEvent.builder()
