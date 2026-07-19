@@ -3,6 +3,8 @@ package com.deepak.trading.consumer;
 import com.deepak.trading.config.KafkaConfig;
 import com.deepak.trading.event.TradingAnalysisCompletedEvent;
 import com.deepak.trading.notification.EmailService;
+import com.deepak.trading.notification.NotificationService;
+import com.deepak.trading.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,24 +15,21 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TradingAnalysisConsumer {
 
-    private final EmailService emailService;
+    private final NotificationService notificationService;
+
+    private final WebSocketNotificationService webSocketNotificationService;
 
     @KafkaListener(topics = KafkaConfig.TRADING_ANALYSIS_TOPIC)
     public void consume(
             TradingAnalysisCompletedEvent event) {
 
-        log.info("=======================================");
         log.info("Trading Analysis Event Received");
-        log.info("Symbol         : {}", event.getSymbol());
-        log.info("Recommendation : {}", event.getRecommendation());
-        log.info("Current Price  : {}", event.getCurrentPrice());
-        log.info("Analysis Time  : {}", event.getAnalysisTime());
-        log.info("=======================================");
 
         try {
-            emailService.sendTradingAnalysisEmail(event);
+            notificationService.notifyUser(event);
+            webSocketNotificationService.sendTradingUpdate(event);
         } catch (Exception ex) {
-            log.error("Unable to send email notification", ex);
+            log.error("Notification failed", ex);
         }
     }
 }
